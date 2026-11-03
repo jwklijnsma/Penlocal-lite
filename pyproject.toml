@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "penlocal-lite"
+version = "0.2.0"
+description = "A local-AI penetration-testing harness — the model is only the brain."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "requests>=2.31",
+    "PyYAML>=6.0",
+    "rich>=13.7",
+]
+
+[project.scripts]
+penlocal = "penlocal.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools]
+packages = ["penlocal"]

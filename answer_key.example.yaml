@@ -1,0 +1,37 @@
+# Example answer key for the PenLocal-lite benchmark.
+# Built the way the blog describes: your pentesters enumerate the known
+# vulnerabilities from the source, weighted by severity, and the harness is
+# scored on how much of that weight it recovers (merging repeated runs).
+#
+# Matching is by component + keyword signal, so keep keywords specific.
+
+vulnerabilities:
+  - id: SQLI-1
+    title: "SQL injection in login form"
+    severity: critical
+    component: "web frontend"
+    keywords: ["sql", "injection", "sqli", "login"]
+
+  - id: IDOR-1
+    title: "Insecure direct object reference on /api/users/{id}"
+    severity: high
+    component: "REST API"
+    keywords: ["idor", "object reference", "authorization", "users"]
+
+  - id: XSS-1
+    title: "Reflected XSS in search parameter"
+    severity: medium
+    component: "web frontend"
+    keywords: ["xss", "cross-site", "reflected", "search"]
+
+  - id: HDR-1
+    title: "Missing security headers (CSP, HSTS)"
+    severity: low
+    component: "web frontend"
+    keywords: ["header", "csp", "hsts", "security headers"]
+
+  - id: INFO-1
+    title: "Verbose error messages leak stack traces"
+    severity: info
+    component: "REST API"
+    keywords: ["verbose", "stack trace", "error", "disclosure"]

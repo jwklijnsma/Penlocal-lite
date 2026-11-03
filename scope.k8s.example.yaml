@@ -1,0 +1,34 @@
+# Example scope for a Kubernetes / OpenShift engagement.
+# Use with:  --toolpack kubernetes   (or  --toolpack openshift)
+
+in_scope:
+  - 10.20.0.0/16                 # cluster node network
+  - api.cluster.example.internal # API server
+  - "*.apps.cluster.example.internal"  # OpenShift app routes / ingress
+
+out_of_scope:
+  - api.prod.example.internal    # production control plane — never touch
+
+# In-scope kubeconfig context names. When set, a kubectl/oc command that
+# selects a context (e.g. --context prod) must name one of these, or it is
+# denied before running.
+clusters:
+  - staging
+  - lab
+
+engagement:
+  client: "Example B.V."
+  goals: >
+    Assess RBAC, workload hardening (privileged pods, host mounts), exposed
+    cluster components, secrets handling, and image vulnerabilities on the
+    staging cluster. Read-only enumeration first; no workload changes without
+    sign-off.
+  authorized_by: "jane.doe@example.com"
+  window: "2026-10-20 / 2026-10-24"
+
+# The kubernetes/openshift tool packs add the policy below automatically; you
+# only need these blocks to add site-specific extras.
+# denylist:
+#   - "\\bkubectl\\s+delete\\s+clusterrolebinding\\b"
+# risky:
+#   - "\\bhelm\\s+(install|upgrade|uninstall)\\b"

@@ -1,0 +1,29 @@
+# Example engagement scope for PenLocal-lite.
+# Only targets listed here will be touched; everything else is denied.
+
+in_scope:
+  - 127.0.0.1
+  - 10.10.10.0/24
+  - http://testphp.vulnweb.com      # a public, intentionally-vulnerable target
+  - staging.example.internal
+
+out_of_scope:
+  - 10.10.10.1                       # gateway — never touch
+  - prod.example.internal
+
+engagement:
+  client: "Example B.V."
+  goals: >
+    Identify auth, access-control and injection issues in the staging web app.
+    Confirm exploitability with evidence; do not alter or exfiltrate data.
+  authorized_by: "jane.doe@example.com"
+  window: "2026-10-20 / 2026-10-24"
+
+# Optional overrides. If omitted, sensible built-in defaults are used:
+#   denylist: hard-blocked command patterns (destructive / DoS / exfil / revshell)
+#   risky:    allowed only after operator approval (brute force, exploit, writes)
+# Add extra patterns here; they are appended to the defaults.
+# denylist:
+#   - "\\bsome-forbidden-tool\\b"
+# risky:
+#   - "\\bcustom-write-action\\b"

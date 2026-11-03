@@ -1,0 +1,31 @@
+# PenLocal-lite config. All fields optional; these are the defaults.
+
+# Backend for every role: "ollama" | "openai-compat" | "mock"
+backend: "ollama"
+ollama_base_url: "http://localhost:11434"
+# For backend: openai-compat (vLLM / llama.cpp --server / LM Studio / TGI)
+api_base: "http://localhost:8000/v1"
+api_key: "not-needed"
+
+# Point each role at any model you have. The verifier is deliberately a
+# DIFFERENT model family from the executor, so a hallucinated finding is less
+# likely to be rubber-stamped.
+planner_model:  "qwen3:8b"
+executor_model: "qwen3:8b"
+verifier_model: "llama3.1:8b"
+assessor_model: "qwen3:8b"
+
+max_steps_per_task: 12
+command_timeout_s: 120
+runs: 3                 # repeat the whole task set and merge; 3 finds more than 1
+workers: 1              # parallel tasks within a run (docker = fresh box per task)
+
+# Domain tool packs: teach the planner the right attack classes and make the
+# policy stricter for that target type. "openshift" implies "kubernetes".
+#   web | kubernetes | openshift
+toolpacks: ["web"]
+
+runner: "local"         # "local" (subprocess) or "docker" (fresh container/task)
+docker_image: "kalilinux/kali-rolling"
+
+workdir: "./penlocal-run"
