@@ -10,7 +10,7 @@
 # Only a few common probes ship in the image (curl, nmap, dig, nc); bigger
 # toolkits belong in `--runner docker` with the kali image from config.
 
-FROM python:3.13-slim AS build
+FROM python:3.15-slim AS build
 WORKDIR /src
 COPY pyproject.toml README.md ./
 COPY penlocal ./penlocal
@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir build \
  && python -m build --wheel --outdir /dist \
  && python -m zipfile -l /dist/*.whl | grep -q "penlocal/web/static/app.js"
 
-FROM python:3.13-slim
+FROM python:3.15-slim
 ARG VERSION=dev
 LABEL org.opencontainers.image.title="penlocal-lite" \
       org.opencontainers.image.description="A local-AI penetration-testing harness — the model is only the brain." \
