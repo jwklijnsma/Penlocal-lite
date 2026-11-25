@@ -42,6 +42,7 @@ from typing import Any
 from urllib.parse import parse_qs, unquote, urlsplit
 
 from .. import __version__
+from ..artex import ArtexClient, ArtexConfig, ArtexError
 from ..assessor import AssessmentReport
 from ..benchmark import AnswerKey, score
 from ..config import Config
@@ -1135,6 +1136,22 @@ class Handler(BaseHTTPRequestHandler):
         parts = [unquote(p) for p in path[len("/api/"):].split("/") if p]
         q = lambda k, d=None: (qs.get(k) or [d])[0]
 
+        if method == "GET" and parts == ["artex", "status"]:
+            cfg = ArtexConfig.from_env()
+            if cfg is None:
+                return self._json(200, {"configured": False, "reachable": False})
+            return self._json(200, ArtexClient(cfg).status())
+        if method == "GET" and len(parts) == 2 and parts[0] == "artex":
+            resource = parts[1]
+            if resource not in ("tasks", "findings", "evidence", "reports"):
+                raise ApiError(404, "not found")
+            cfg = ArtexConfig.from_env()
+            if cfg is None:
+                raise ApiError(503, "ARTEX is not configured; set PENLOCAL_ARTEX_URL")
+            try:
+                return self._json(200, ArtexClient(cfg).collection(resource))
+            except ArtexError as exc:
+                raise ApiError(502, str(exc)) from None
         if method == "GET" and parts == ["status"]:
             return self._json(200, app.server_status())
         if method == "GET" and parts == ["scopes"]:
