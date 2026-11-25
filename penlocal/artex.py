@@ -11,7 +11,7 @@ import time
 from dataclasses import dataclass
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 
 MAX_RESPONSE = 2 * 1024 * 1024
@@ -65,8 +65,13 @@ class ArtexClient:
         if config.endpoints:
             self.endpoints.update(config.endpoints)
         for key, path in self.endpoints.items():
-            if key not in DEFAULT_ENDPOINTS or not isinstance(path, str) or not path.startswith("/") or path.startswith("//"):
-                raise ArtexError("ARTEX endpoint paths must be absolute local paths")
+            parsed_path = urlsplit(path) if isinstance(path, str) else None
+            if (key not in DEFAULT_ENDPOINTS or parsed_path is None
+                    or not path.startswith("/") or path.startswith("//")
+                    or parsed_path.scheme or parsed_path.netloc or parsed_path.query
+                    or parsed_path.fragment or "\\\\" in path
+                    or ".." in parsed_path.path.split("/")):
+                raise ArtexError("ARTEX endpoint paths must be safe absolute local paths")
 
     def _get(self, path: str):
         url = self.base_url + path
@@ -74,8 +79,13 @@ class ArtexClient:
         if self.config.token:
             headers["Authorization"] = f"Bearer {self.config.token}"
         request = Request(url, headers=headers, method="GET")
+
+        class _NoRedirect(HTTPRedirectHandler):
+            def redirect_request(self, req, fp, code, msg, headers, newurl):
+                return None
+
         try:
-            with urlopen(request, timeout=self.config.timeout) as response:
+            with build_opener(_NoRedirect).open(request, timeout=self.config.timeout) as response:
                 raw = response.read(MAX_RESPONSE + 1)
                 if len(raw) > MAX_RESPONSE:
                     raise ArtexError("ARTEX response exceeds 2 MiB limit")
@@ -92,8 +102,6 @@ class ArtexClient:
 
     def status(self) -> dict:
         started = time.monotonic()
-        # A root health endpoint is optional; task-list connectivity is the
-        # compatibility probe and can be overridden via PENLOCAL_ARTEX_TASKS_PATH.
         try:
             self._get(self.endpoints["tasks"])
             return {"configured": True, "reachable": True,
