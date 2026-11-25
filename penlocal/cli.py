@@ -238,6 +238,26 @@ def cmd_benchmark(args) -> int:
     return 0
 
 
+def cmd_serve(args) -> int:
+    """Start the web UI (penlocal/web)."""
+    from .web import serve
+    cfg = _apply_overrides(Config.load(args.config), args)
+    errors, warnings = preflight(cfg)
+    for w in warnings:
+        print(f"  [warn] {w}")
+    if errors:
+        for e in errors:
+            print(f"  [ERROR] {e}")
+        return 2
+    workdir = Path(args.workdir) if args.workdir else Path("./penlocal-web")
+    return serve(cfg, Path(args.scopes), workdir, bind=args.bind, port=args.port,
+                 token=args.token, no_auth=args.no_auth,
+                 context_roots=[Path(p) for p in (args.context_root or [])],
+                 allow_auto_approve=args.allow_auto_approve,
+                 approval_timeout=args.approval_timeout, open_browser=args.open,
+                 verbose=args.verbose)
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="penlocal",
                                 description="Local-AI pentest harness (PenLocal-lite).")
@@ -288,12 +308,31 @@ def build_parser() -> argparse.ArgumentParser:
     b.add_argument("--yes", action="store_true")
     b.add_argument("--auto-approve-risky", action="store_true")
     b.set_defaults(func=cmd_benchmark)
+
+    w = sub.add_parser("serve", help="Start the web UI.")
+    common(w)
+    w.add_argument("--scopes", default="./scopes",
+                   help="Folder with scope files (and answer keys); created if missing.")
+    w.add_argument("--bind", default="127.0.0.1")
+    w.add_argument("--port", type=int, default=8770)
+    w.add_argument("--token", help="Access token (default: $PENLOCAL_WEB_TOKEN or random).")
+    w.add_argument("--no-auth", action="store_true", help="No token (loopback only).")
+    w.add_argument("--context-root", action="append",
+                   help="Folder whose source code runs may use as white-box context (repeatable).")
+    w.add_argument("--allow-auto-approve", action="store_true",
+                   help="Let the UI auto-approve risky steps (lab use only).")
+    w.add_argument("--approval-timeout", type=int, default=900,
+                   help="Seconds a risky step waits for a human before it is declined (0 = forever).")
+    w.add_argument("--open", action="store_true", help="Open the UI in a browser.")
+    w.add_argument("--verbose", action="store_true", help="Log every HTTP request.")
+    w.set_defaults(func=cmd_serve)
     return p
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    print(BANNER)
+    if args.cmd != "serve":
+        print(BANNER)
     try:
         return args.func(args)
     except KeyboardInterrupt:

@@ -206,6 +206,13 @@ class MockLLM(BaseLLM):
                     "recommendation": "Review the response and restrict as needed.",
                 },
             }
+        # model "mock-approval": on the API task, first propose a step the policy
+        # gates behind a human (it is still a harmless echo), so the approval flow
+        # can be tried without a model server. A decline falls back to the probe.
+        if (self.model == "mock-approval" and "input-validation" in user
+                and "[declined]" not in user):
+            return {"thought": "Try a state-changing request; this needs sign-off.",
+                    "command": 'echo "mock-probe: curl -X POST http://demo.local/api/users"'}
         # First step: emit a harmless, in-scope-agnostic probe that actually runs.
         return {"thought": "Start with a cheap probe.",
                 "command": 'echo "mock-probe: harness pipeline is live"'}

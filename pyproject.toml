@@ -22,4 +22,7 @@ penlocal = "penlocal.cli:main"
 dev = ["pytest>=8.0"]
 
 [tool.setuptools]
-packages = ["penlocal"]
+packages = ["penlocal", "penlocal.web"]
+
+[tool.setuptools.package-data]
+"penlocal.web" = ["static/*"]
