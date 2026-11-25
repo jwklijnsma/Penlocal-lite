@@ -1,0 +1,122 @@
+name: docker
+
+# Builds the image and pushes it to GHCR (ghcr.io/<owner>/penlocal-lite).
+#   push to main   -> :main, :sha-<short>
+#   tag vX.Y.Z     -> :X.Y.Z, :X.Y, :X, :latest
+#   pull request   -> build only (no push), as a check
+#
+# Release tags are pushed by release.yml with GITHUB_TOKEN, which does not start
+# other workflows, so release.yml's success also triggers this (workflow_run).
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+    paths-ignore: ["docs/**", "**.md"]
+  pull_request:
+    paths: ["Dockerfile", ".dockerignore", "pyproject.toml", "penlocal/**", ".github/workflows/docker.yml"]
+  workflow_run:
+    workflows: [release]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image:
+    # For workflow_run: only after a successful, real (non dry-run) release.
+    if: >-
+      github.event_name != 'workflow_run'
+      || (github.event.workflow_run.conclusion == 'success'
+          && github.event.workflow_run.event == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      # After a release run: build the tag it just created (the newest vX.Y.Z on main).
+      - name: Resolve the release tag
+        id: ref
+        if: github.event_name == 'workflow_run'
+        run: |
+          set -euo pipefail
+          git fetch --tags --force origin
+          tag=$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' origin/main 2>/dev/null || true)
+          if [ -z "$tag" ]; then
+            echo "No release tag found (dry run?); nothing to publish." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          git checkout -q "$tag"
+          echo "Publishing image for $tag" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Image name (lowercase)
+        if: steps.ref.outputs.skip != 'true'
+        id: name
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-qemu-action@v3
+        if: steps.ref.outputs.skip != 'true'
+
+      - uses: docker/setup-buildx-action@v3
+        if: steps.ref.outputs.skip != 'true'
+
+      - uses: docker/login-action@v3
+        if: steps.ref.outputs.skip != 'true' && github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        if: steps.ref.outputs.skip != 'true'
+        id: meta
+        with:
+          images: ${{ steps.name.outputs.image }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix=sha-
+            type=semver,pattern={{version}},value=${{ steps.ref.outputs.tag }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.ref.outputs.tag }}
+            type=semver,pattern={{major}},value=${{ steps.ref.outputs.tag }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+          flavor: |
+            latest=${{ startsWith(github.ref, 'refs/tags/v') || steps.ref.outputs.tag != '' }}
+
+      - name: Version for the image label
+        if: steps.ref.outputs.skip != 'true'
+        id: ver
+        run: echo "version=$(sed -n 's/^__version__ = "\(.*\)"$/\1/p' penlocal/__init__.py)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/build-push-action@v6
+        if: steps.ref.outputs.skip != 'true'
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: VERSION=${{ steps.ver.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+
+      - name: Smoke test
+        if: steps.ref.outputs.skip != 'true' && github.event_name == 'pull_request'
+        run: |
+          docker buildx build --load -t penlocal-lite:test .
+          docker run --rm penlocal-lite:test --version
