@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "penlocal-lite"
-version = "0.2.0"
+dynamic = ["version"]
 description = "A local-AI penetration-testing harness — the model is only the brain."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -23,6 +23,10 @@ dev = ["pytest>=8.0"]
 
 [tool.setuptools]
 packages = ["penlocal", "penlocal.web"]
+
+[tool.setuptools.dynamic]
+# Single source of truth: the release workflow bumps __version__ only.
+version = { attr = "penlocal.__version__" }
 
 [tool.setuptools.package-data]
 "penlocal.web" = ["static/*"]
