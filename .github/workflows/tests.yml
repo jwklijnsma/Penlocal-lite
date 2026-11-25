@@ -1,0 +1,36 @@
+# Offline tests: the guardrail/harness smoke tests and the web UI server tests.
+# No model server and no real targets are needed (mock backend, echo probes).
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: python -m pytest -q tests/
+      - name: The wheel ships the web UI
+        run: |
+          pip wheel --no-deps -w dist .
+          unzip -l dist/*.whl | grep -q "penlocal/web/static/app.js"

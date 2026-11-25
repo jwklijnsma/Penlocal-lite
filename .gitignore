@@ -2,3 +2,9 @@ __pycache__/
 *.pyc
 .venv/
 penlocal-run/
+web/node_modules/
+penlocal-web/
+scopes/
+build/
+*.egg-info/
+dist/
