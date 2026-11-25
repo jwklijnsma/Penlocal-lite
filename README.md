@@ -313,6 +313,18 @@ npm run dev          # Vite on :5173, proxying /api to `penlocal serve --port 87
 npm test && npm run build
 ```
 
+## ARTEX integration
+
+PenLocal-lite can connect to a separately hosted [ARTEX](https://github.com/BaaRai/ARTEX)
+instance through a read-only connector. The authenticated PenLocal API exposes ARTEX
+connection status and task, finding, evidence and report collections. See
+[docs/ARTEX.md](docs/ARTEX.md) for configuration and API paths.
+
+The connector never launches ARTEX tasks, dispatches agents, approves tool calls, replays
+traffic or executes commands. ARTEX retains its own scope, approval and audit controls.
+The connector uses ARTEX's HTTP API and does not vendor its AGPL-3.0 source into this MIT
+project.
+
 ## Docker image
 
 The `docker` workflow builds `ghcr.io/jwklijnsma/penlocal-lite` (amd64 + arm64)
