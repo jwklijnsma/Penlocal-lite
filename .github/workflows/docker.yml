@@ -101,7 +101,7 @@ jobs:
         id: ver
         run: echo "version=$(sed -n 's/^__version__ = "\(.*\)"$/\1/p' penlocal/__init__.py)" >> "$GITHUB_OUTPUT"
 
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         if: steps.ref.outputs.skip != 'true'
         with:
           context: .
