@@ -133,7 +133,7 @@ jobs:
 
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.13"
+          python-version: "3.15"
           cache: pip
 
       - name: Test
@@ -192,7 +192,7 @@ jobs:
 
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.13"
+          python-version: "3.15"
 
       - name: Check the tag matches __version__
         id: ver
