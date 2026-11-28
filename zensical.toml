@@ -1,0 +1,93 @@
+# PenLocal-lite documentation - built with Zensical (https://zensical.org), same design as shift-mox
+#   pip install -r requirements-docs.txt
+#   zensical serve            # preview on http://localhost:8000
+#   zensical build --strict   # what CI runs
+
+[project]
+site_name = "PenLocal-lite"
+site_description = "A local-AI penetration-testing harness in Python: the LLM is only the brain, the harness decides what it sees and may run"
+site_url = "https://jwklijnsma.github.io/Penlocal-lite/"
+repo_url = "https://github.com/jwklijnsma/Penlocal-lite"
+repo_name = "jwklijnsma/Penlocal-lite"
+edit_uri = "edit/main/docs/"
+copyright = "PenLocal-lite - authorized use only"
+nav = [
+  { "Home" = "index.md" },
+  { "Getting started" = [
+    { "Audit the guardrail first" = "guardrail.md" },
+    { "Try it in 10 seconds" = "try-it.md" },
+    { "Install" = "install.md" },
+  ] },
+  { "Usage" = [
+    { "Command line" = "usage.md" },
+    { "Web UI" = "web-ui.md" },
+    { "Docker image" = "docker.md" },
+  ] },
+  { "Concepts" = [
+    { "The five harness components" = "harness.md" },
+    { "Why repetition matters" = "repetition.md" },
+    { "Backends" = "backends.md" },
+    { "Kubernetes and OpenShift packs" = "tool-packs.md" },
+  ] },
+  { "Safety" = [
+    { "Safety model" = "safety.md" },
+    { "Left to a human" = "human.md" },
+    { "Not included" = "not-included.md" },
+  ] },
+  { "Reference" = [
+    { "Releases" = "releases.md" },
+    { "Layout" = "layout.md" },
+    { "License" = "license.md" },
+  ] },
+]
+
+[project.theme]
+language = "en"
+features = [
+  "content.action.edit",
+  "content.code.annotate",
+  "content.code.copy",
+  "navigation.footer",
+  "navigation.sections",
+  "navigation.tabs",
+  "navigation.top",
+  "search.highlight",
+]
+
+[project.theme.icon]
+logo = "material/shield-bug"
+repo = "fontawesome/brands/github"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+primary = "red"
+accent = "deep orange"
+toggle.icon = "material/weather-night"
+toggle.name = "Dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+primary = "red"
+accent = "deep orange"
+toggle.icon = "material/weather-sunny"
+toggle.name = "Light mode"
+
+[project.markdown_extensions]
+admonition = {}
+attr_list = {}
+md_in_html = {}
+tables = {}
+toc.permalink = true
+pymdownx.details = {}
+pymdownx.emoji.emoji_index = "zensical.extensions.emoji.twemoji"
+pymdownx.emoji.emoji_generator = "zensical.extensions.emoji.to_svg"
+pymdownx.highlight.anchor_linenums = true
+pymdownx.inlinehilite = {}
+pymdownx.keys = {}
+pymdownx.snippets = {}
+pymdownx.tabbed.alternate_style = true
+pymdownx.superfences.custom_fences = [
+  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+]
