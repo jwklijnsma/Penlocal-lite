@@ -8,3 +8,5 @@ scopes/
 build/
 *.egg-info/
 dist/
+site/
+.cache/
