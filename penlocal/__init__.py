@@ -8,4 +8,4 @@ is allowed to see, run, and keep.
 Use only against systems you are explicitly authorized to test.
 """
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
